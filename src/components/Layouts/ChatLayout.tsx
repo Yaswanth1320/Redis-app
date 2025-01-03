@@ -7,8 +7,8 @@ import {
 } from "../ui/resizable";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import Sidebar from "../Sidebar";
-import MessageContainer from "../MessageContainer";
+import Sidebar from "../chat/Sidebar";
+import MessageContainer from "../chat/MessageContainer";
 
 interface ChatLayoutProps {
   defaultLayout: number[] | undefined;

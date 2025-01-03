@@ -1,5 +1,5 @@
 import { USERS } from "@/db/dummy";
-import { Avatar, AvatarImage } from "./ui/avatar";
+import { Avatar, AvatarImage } from "../ui/avatar";
 import { Info, X } from "lucide-react";
 
 const TopBar = () => {

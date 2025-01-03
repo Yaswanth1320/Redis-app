@@ -1,7 +1,7 @@
 import { messages, USERS } from "@/db/dummy";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
-import { Avatar, AvatarImage } from "./ui/avatar";
+import { Avatar, AvatarImage } from "../ui/avatar";
 
 const MessageList = () => {
   const selectedUser = USERS[0];

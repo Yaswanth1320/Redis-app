@@ -1,11 +1,13 @@
 import { USERS } from "@/db/dummy";
-import { ScrollArea } from "./ui/scroll-area";
-import { Tooltip, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { ScrollArea } from "../ui/scroll-area";
+import { Tooltip, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { TooltipContent } from "@radix-ui/react-tooltip";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import { LogOut } from "lucide-react";
+import useSound from "use-sound";
+import { usePreference } from "@/store/usePreferences";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -13,6 +15,8 @@ interface SidebarProps {
 
 const Sidebar = ({ isCollapsed }: SidebarProps) => {
   const selectedUser = USERS[0];
+  const [playClickSound] = useSound("/sounds/mouse-click.mp3");
+  const { soundEnabled } = usePreference();
   return (
     <div className="flex relative flex-col h-full gap-4 p-2 data-[collapsed=true]:p-2 max-h-full overflow-auto bg-background">
       {!isCollapsed && (
@@ -28,7 +32,7 @@ const Sidebar = ({ isCollapsed }: SidebarProps) => {
             <TooltipProvider key={idx}>
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
-                  <div>
+                  <div onClick={() => soundEnabled && playClickSound()}>
                     <Avatar className="my-1 flex justify-center items-center">
                       <AvatarImage
                         src={user.image || "/user-placeholder.png"}
@@ -58,6 +62,9 @@ const Sidebar = ({ isCollapsed }: SidebarProps) => {
               )}
               variant={"grey"}
               size={"xl"}
+              onClick={() => {
+                soundEnabled && playClickSound();
+              }}
             >
               <Avatar className="my-1 flex justify-center items-center">
                 <AvatarImage
