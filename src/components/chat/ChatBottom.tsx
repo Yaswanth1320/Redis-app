@@ -9,6 +9,7 @@ import {
 import { Textarea } from "../ui/textarea";
 import { useRef, useState } from "react";
 import EmojiPicker from "./EmojiPicker";
+import { CldUploadWidget } from "next-cloudinary";
 import { Button } from "../ui/button";
 import useSound from "use-sound";
 import { usePreference } from "@/store/usePreferences";
@@ -62,7 +63,17 @@ const ChatBottom = () => {
   return (
     <div className="p-2 flex justify-between w-full items-center gap-2">
       {!message.trim() && (
-        <ImageIcon size={20} className="cursor-pointer text-muted-foreground" />
+        <CldUploadWidget signatureEndpoint="/api/sign-cloudinary-params">
+          {({ open }) => {
+            return (
+              <ImageIcon
+                size={20}
+                className="cursor-pointer text-muted-foreground"
+                onClick={() => open()}
+              />
+            );
+          }}
+        </CldUploadWidget>
       )}
       <AnimatePresence>
         <motion.div
