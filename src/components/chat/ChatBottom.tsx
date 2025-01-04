@@ -11,15 +11,24 @@ import { useRef, useState } from "react";
 import EmojiPicker from "./EmojiPicker";
 import { Button } from "../ui/button";
 import useSound from "use-sound";
+import { usePreference } from "@/store/usePreferences";
 
 const ChatBottom = () => {
   const [message, setMessage] = useState("");
+  const { soundEnabled } = usePreference();
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const isPending = false;
   const [playSound1] = useSound("/sounds/keystroke1.mp3");
   const [playSound2] = useSound("/sounds/keystroke2.mp3");
   const [playSound3] = useSound("/sounds/keystroke3.mp3");
   const [playSound4] = useSound("/sounds/keystroke4.mp3");
+
+  const soundsArray = [playSound1, playSound2, playSound3, playSound4];
+
+  const playRandomKeyStroke = () => {
+    const randomIndex = Math.floor(Math.random() * soundsArray.length);
+    soundEnabled && soundsArray[randomIndex]();
+  };
 
   return (
     <div className="p-2 flex justify-between w-full items-center gap-2">
@@ -46,7 +55,10 @@ const ChatBottom = () => {
             placeholder="Aa"
             rows={1}
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e) => {
+              setMessage(e.target.value);
+              playRandomKeyStroke();
+            }}
             className="w-full border rounded-full flex items-center h-9 resize-none overflow-hidden bg-background min-h-0"
             ref={textAreaRef}
           />
