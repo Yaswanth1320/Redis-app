@@ -7,25 +7,40 @@ import {
   ThumbsUp,
 } from "lucide-react";
 import { Textarea } from "../ui/textarea";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import EmojiPicker from "./EmojiPicker";
-import { CldUploadWidget } from "next-cloudinary";
+import { CldUploadWidget, CloudinaryUploadWidgetInfo } from "next-cloudinary";
 import { Button } from "../ui/button";
 import useSound from "use-sound";
 import { usePreference } from "@/store/usePreferences";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { sendMessageAction } from "@/actions/message.action";
 import { useSelectedUser } from "@/store/useSelectedUser";
+import { pusherClient } from "@/lib/pusher";
+import {
+  DialogContent,
+  Dialog,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../ui/dialog";
+import Image from "next/image";
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { Message } from "@/db/dummy";
 
 const ChatBottom = () => {
   const [message, setMessage] = useState("");
   const { soundEnabled } = usePreference();
   const { selectedUser } = useSelectedUser();
+  const { user: currentUser } = useKindeBrowserClient();
+  const [imagUrl, setImageUrl] = useState("");
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const queryClient = useQueryClient();
   const [playSound1] = useSound("/sounds/keystroke1.mp3");
   const [playSound2] = useSound("/sounds/keystroke2.mp3");
   const [playSound3] = useSound("/sounds/keystroke3.mp3");
   const [playSound4] = useSound("/sounds/keystroke4.mp3");
+  const [notification] = useSound("/sounds/notification.mp3");
   const soundsArray = [playSound1, playSound2, playSound3, playSound4];
 
   const { mutate: sendMessage, isPending } = useMutation({
@@ -60,10 +75,50 @@ const ChatBottom = () => {
     soundEnabled && soundsArray[randomIndex]();
   };
 
+  useEffect(() => {
+    const channelName = `${currentUser?.id}__${selectedUser?.id}`
+      .split("__")
+      .sort()
+      .join("__");
+
+    const channel = pusherClient?.subscribe(channelName);
+
+    const handleNewMessage = (data: { message: Message }) => {
+      queryClient.setQueryData(
+        ["messages", selectedUser?.id],
+        (oldMessages: Message[]) => {
+          return [...oldMessages, data.message];
+        }
+      );
+      if (soundEnabled && data.message.senderId !== currentUser?.id) {
+        notification();
+      }
+    };
+
+    channel.bind("newMessage", handleNewMessage);
+
+    return () => {
+      channel.unbind("newMessage", handleNewMessage);
+      pusherClient.unsubscribe(channelName);
+    };
+  }, [
+    currentUser?.id,
+    selectedUser?.id,
+    queryClient,
+    soundEnabled,
+    notification,
+  ]);
+
   return (
     <div className="p-2 flex justify-between w-full items-center gap-2">
       {!message.trim() && (
-        <CldUploadWidget signatureEndpoint="/api/sign-cloudinary-params">
+        <CldUploadWidget
+          signatureEndpoint="/api/sign-cloudinary-params"
+          onSuccess={(result, { widget }) => {
+            setImageUrl((result.info as CloudinaryUploadWidgetInfo).secure_url);
+            widget.close();
+          }}
+        >
           {({ open }) => {
             return (
               <ImageIcon
@@ -75,6 +130,38 @@ const ChatBottom = () => {
           }}
         </CldUploadWidget>
       )}
+
+      <Dialog open={!!imagUrl}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Image Preview</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center items-center relative h-96 w-full mx-auto">
+            <Image
+              src={imagUrl}
+              alt="Image preview"
+              className="object-contain"
+              fill
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="submit"
+              onClick={() => {
+                sendMessage({
+                  content: imagUrl,
+                  messageType: "image",
+                  receiverId: selectedUser?.id!,
+                });
+                setImageUrl("");
+              }}
+            >
+              Send
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <AnimatePresence>
         <motion.div
           layout
