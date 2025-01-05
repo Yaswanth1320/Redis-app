@@ -9,7 +9,7 @@ const MenuTab = () => {
   const { setTheme } = useTheme();
   const { soundEnabled, setSoundEnabled } = usePreference();
   const [mouseCLick] = useSound("/sounds/clicky-mouse-click.mp3");
-  const [soundOn] = useSound("/sounds/unmute.mp3", { volume: 0.3 });
+  const [soundOn] = useSound("/sounds/sound-on.mp3", { volume: 0.3 });
   const [soundOff] = useSound("/sounds/sound-off.mp3", { volume: 0.3 });
 
   return (
